@@ -1,4 +1,4 @@
-import Router from 'express';
+import { Router } from 'express';
 import { getTenantConnection } from '../utils/db';
 
 const router = Router();
@@ -12,22 +12,23 @@ const router = Router();
  * 200:
  * description: Lista de items
  */
-
 router.get('/', async (req, res) => {
-    try {
-        const { dbName, userId } = req.ripcore;
+  try {
+    // 1. Obtener contexto
+    const { dbName, userId } = req.ripcore;
+    
+    console.log(`Usuario ${userId} solicitando items de ${dbName}`);
 
-        console.log(`Usuario ${userId} solicitando items de ${dbName}`);
+    // 2. Obtener conexión
+    const pool = await getTenantConnection(dbName);
 
-        const pool = await getTenantConnection(dbName);
+    // 3. Consultar (Asegúrate de que la tabla Items exista en tu BD de prueba)
+    const result = await pool.request().query('SELECT TOP 10 * FROM Items');
 
-        const result = await pool.query('SELECT * FROM items');
-
-        res.json(result.recordset);
-    } catch (error: any) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al obtener items' });
-    }
-})
+    res.json(result.recordset);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;
